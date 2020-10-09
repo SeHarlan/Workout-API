@@ -1,0 +1,30 @@
+{
+  "dummyWorkout": {
+    "name": "test name",
+    "description": "test desc",
+    "heavy": 5,
+    "medium": 3,
+    "light": 1,
+    "position": 0
+  },
+  "dummyW2": {
+    "name": "test2 name",
+    "description": "test2 desc",
+    "heavy": 10,
+    "medium": 5,
+    "light": 2,
+    "position": 1
+  },
+  "dummyW3": {
+    "name": "test3 name",
+    "description": "test3 desc",
+    "heavy": 130,
+    "medium": 50,
+    "light": 20,
+    "position": 2
+  },
+  "dummyUser": {
+    "name": "test",
+    "passwordHash": "testHash"
+  }
+}

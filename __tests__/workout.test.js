@@ -1,97 +1,94 @@
-const Workout = require('../lib/models/workout')
-const pool = require('../lib/utils/pool')
-const fs = require('fs')
+const Workout = require('../lib/models/workout');
+const User = require('../lib/models/user');
+const pool = require('../lib/utils/pool');
+const fs = require('fs');
 
-const dummyWorkout = {
-  name: 'test name',
-  description: 'test desc',
-  heavy: 5,
-  medium: 3,
-  light: 1,
-  position: 0
-}
-const dummyW2 = {
-  name: 'test2 name',
-  description: 'test2 desc',
-  heavy: 10,
-  medium: 5,
-  light: 2,
-  position: 1
-}
-
-const dummyW3 = {
-  name: 'test3 name',
-  description: 'test3 desc',
-  heavy: 130,
-  medium: 50,
-  light: 20,
-  position: 2
-}
+const { dummyWorkout, dummyW2, dummyW3, dummyUser } = require('./dummyData.json');
 
 describe(' workout model', () => {
   beforeEach(() => {
-    return pool.query(fs.readFileSync('./sql/setup.sql', 'utf-8'))
-  })
+    return pool.query(fs.readFileSync('./sql/setup.sql', 'utf-8'));
+  });
 
-  it('inserts a new workout to db', async () => {
-    const createdWorkout = await Workout.insert(dummyWorkout)
+  afterAll(() => {
+    pool.end();
+  });
 
-    const { rows: selectedWorkouts } = await pool.query(
-      'SELECT * FROM workouts WHERE id = $1',
-      [createdWorkout.id]
-    );
-    expect(selectedWorkouts[0]).toEqual(createdWorkout)
-  })
+  it('inserts a new workout with userID', async () => {
+    const user = await User.insert(dummyUser);
+    const createdWorkout = await Workout.insert(user.id, dummyWorkout);
+
+    expect(createdWorkout).toEqual({
+      ...dummyWorkout,
+      userID: user.id,
+      id: expect.any(Number)
+    });
+  });
 
   it('finds a workout by id', async () => {
-    const createdWorkout = await Workout.insert(dummyWorkout)
+    const user = await User.insert(dummyUser);
+    const createdWorkout = await Workout.insert(user.id, dummyWorkout);
 
-    const foundWorkout = await Workout.findById(createdWorkout.id)
+    const foundWorkout = await Workout.findById(createdWorkout.id);
 
     expect(foundWorkout).toEqual({
       ...dummyWorkout,
+      userID: user.id,
       id: createdWorkout.id
-    })
-  })
+    });
+  });
 
-  it('returns null if no dog is found by id', async () => {
-    const nullWorkout = await Workout.findById(234234234)
-    expect(nullWorkout).toEqual(null)
-  })
+  it('returns null if no workout is found by id', async () => {
+    const nullWorkout = await Workout.findById(234234234);
+    expect(nullWorkout).toEqual(null);
+  });
 
-  it('gets all workouts', async () => {
+  it('gets all workouts by UserID', async () => {
+    const user = await User.insert(dummyUser);
+    const user2 = await User.insert({
+      name: 'fail',
+      passwordHash: 'fail hash'
+    });
     await Promise.all([
-      Workout.insert(dummyWorkout),
-      Workout.insert(dummyW2),
-      Workout.insert(dummyW3)
-    ])
+      Workout.insert(user.id, dummyWorkout),
+      Workout.insert(user.id, dummyW2),
+      Workout.insert(user2.id, dummyW3)
+    ]);
 
-    const workouts = await Workout.getAll()
+    const workouts = await Workout.getAll(user.id);
 
     expect(workouts).toEqual(expect.arrayContaining([
-      { ...dummyWorkout, id: expect.any(Number) },
-      { ...dummyW2, id: expect.any(Number) },
-      { ...dummyW3, id: expect.any(Number) }]))
-  })
+      { ...dummyWorkout, id: expect.any(Number), userID: user.id },
+      { ...dummyW2, id: expect.any(Number), userID: user.id }]));
+
+    expect(workouts).not.toEqual(expect.arrayContaining([{ ...dummyW3, id: expect.any(Number), userID: user2.id }]));
+  });
+
+  it('returns null when there is no user found with a get all', async () => {
+    const nullWorkouts = await Workout.getAll(234234234);
+    expect(nullWorkouts).toEqual(null);
+  });
 
   it('updates a workout by id', async () => {
-    const createdWorkout = await Workout.insert(dummyWorkout)
+    const user = await User.insert(dummyUser);
+    const createdWorkout = await Workout.insert(user.id, dummyWorkout);
 
     const updatedWorkout = await Workout.update({
       ...createdWorkout,
       name: 'new name',
       description: 'new desc',
       light: 20,
-    })
+    });
 
     expect(updatedWorkout).toEqual({
       ...dummyWorkout,
+      userID: user.id,
       id: createdWorkout.id,
       name: 'new name',
       description: 'new desc',
       light: 20,
-    })
-  })
+    });
+  });
 
   it('throws error if no workout found to update', async () => {
     const updatedWorkout = await Workout.update({
@@ -100,35 +97,62 @@ describe(' workout model', () => {
       name: 'new name',
       description: 'new desc',
       light: 20,
-    })
+    });
 
-    expect(updatedWorkout).toBeInstanceOf(TypeError)
-  })
+    expect(updatedWorkout).toBeInstanceOf(TypeError);
+  });
 
   it('updates a workout position by id', async () => {
-    const createdWorkout = await Workout.insert(dummyWorkout)
+    const user = await User.insert(dummyUser);
+    const createdWorkout = await Workout.insert(user.id, dummyWorkout);
 
     const updatedWorkout = await Workout.update({
       ...dummyWorkout,
       id: createdWorkout.id,
       position: 5
-    })
+    });
 
     expect(updatedWorkout).toEqual({
       ...dummyWorkout,
       id: createdWorkout.id,
-      position: 5
-    })
-  })
+      position: 5,
+      userID: user.id
+    });
+  });
 
   it('deletes a workout by id', async () => {
-    const createdWorkout = await Workout.insert(dummyWorkout)
+    const user = await User.insert(dummyUser);
+    const createdWorkout = await Workout.insert(user.id, dummyWorkout);
 
-    const deletedWorkout = await Workout.delete(createdWorkout.id)
+    const deletedWorkout = await Workout.delete(createdWorkout.id);
 
     expect(deletedWorkout).toEqual({
       ...dummyWorkout,
+      userID: user.id,
       id: createdWorkout.id
-    })
-  })
-})
+    });
+  });
+
+  it('deletes all workouts with userID and returns null with get all', async () => {
+    const user = await User.insert(dummyUser);
+
+    await Promise.all([
+      Workout.insert(user.id, dummyWorkout),
+      Workout.insert(user.id, dummyW2),
+      Workout.insert(user.id, dummyW3)
+    ]);
+
+    const workouts = await Workout.getAll(user.id);
+
+    expect(workouts).toEqual(expect.arrayContaining([
+      { ...dummyWorkout, id: expect.any(Number), userID: user.id },
+      { ...dummyW2, id: expect.any(Number), userID: user.id },
+      { ...dummyW3, id: expect.any(Number), userID: user.id }]));
+
+    await Workout.deleteAll(user.id);
+
+    const nullWorkouts = await Workout.getAll(user.id);
+
+    expect(nullWorkouts).toEqual(null);
+  });
+});
