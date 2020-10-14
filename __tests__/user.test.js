@@ -33,6 +33,26 @@ describe('user model', () => {
       id: createdUser.id
     });
   });
+  it('gets all users', async () => {
+    await Promise.all([
+      User.insert(dummyUser),
+      User.insert({
+        name: 'name 2',
+        passwordHash: 'hash 2'
+      })
+    ]);
+
+    const users = await User.getAll();
+
+    expect(users).toEqual(expect.arrayContaining([
+      { ...dummyUser, id: expect.any(Number) },
+      {
+        name: 'name 2',
+        passwordHash: 'hash 2',
+        id: expect.any(Number)
+      }
+    ]));
+  });
 
   it('updates a user info', async () => {
     const createdUser = await User.insert(dummyUser);
