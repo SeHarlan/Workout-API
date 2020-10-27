@@ -10,10 +10,6 @@ describe(' workout model', () => {
     return pool.query(fs.readFileSync('./sql/setup.sql', 'utf-8'));
   });
 
-  afterAll(() => {
-    pool.end();
-  });
-
   it('inserts a new workout with userID', async () => {
     const user = await User.insert(dummyUser);
     const createdWorkout = await Workout.insert(user.id, dummyWorkout);
