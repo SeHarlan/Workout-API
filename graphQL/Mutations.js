@@ -4,7 +4,8 @@ const {
   GraphQLObjectType,
   GraphQLInt,
   GraphQLNonNull,
-  GraphQLString
+  GraphQLString,
+  GraphQLList,
 } = require('graphql');
 const { UserType, WorkoutType } = require('./Objects');
 
@@ -87,7 +88,19 @@ const RootMutationType = new GraphQLObjectType({
       resolve: (parent, { id }) => {
         return Workout.delete(id);
       }
-    }
+    },
+    shiftWorkout: {
+      type: new GraphQLList(WorkoutType),
+      description: 'Incriments a users workout positions from designated spot',
+      args: {
+        userID: { type: GraphQLNonNull(GraphQLInt) },
+        workoutID: { type: GraphQLNonNull(GraphQLInt) },
+        newPosition: { type: GraphQLNonNull(GraphQLInt) },
+      },
+      resolve: (parent, { userID, workoutID, newPosition }) => {
+        return Workout.shift(userID, workoutID, newPosition);
+      }
+    },
   })
 });
 

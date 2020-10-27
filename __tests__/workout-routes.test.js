@@ -35,11 +35,12 @@ describe('Workout-API graphQL routes', () => {
 
     const { addWorkout } = body.data;
 
-    expect(addWorkout).toEqual({
-      ...dummyWorkout,
-      id: expect.any(Number),
-      userID: user.id
-    });
+    expect(addWorkout).toEqual(
+      {
+        ...dummyWorkout,
+        id: expect.any(Number),
+        userID: user.id
+      });
   });
   it('gets all a users workouts with graphQL', async () => {
     const user = await User.insert(dummyUser);
@@ -139,5 +140,40 @@ describe('Workout-API graphQL routes', () => {
     const { deleteWorkout } = body.data;
 
     expect(deleteWorkout).toEqual(createdWorkout);
+  });
+
+  it('shifts a workouts position from a newly declared position', async () => {
+    const user = await User.insert(dummyUser);
+    await Promise.all([
+      Workout.insert(user.id, dummyWorkout),
+      Workout.insert(user.id, dummyW2),
+    ]);
+    const insertedWorkout = await Workout.insert(user.id, dummyW3);
+
+    const query = `
+      mutation {
+        shiftWorkout(userID: ${user.id}, workoutID: ${insertedWorkout.id}, newPosition: 1) {
+          id
+          userID
+          name
+          description
+          heavy
+          medium
+          light
+          position
+        }
+      }`;
+    const { body } = await request(app)
+      .post('/graphql')
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json')
+      .send(JSON.stringify({ query }));
+
+    const { shiftWorkout } = body.data;
+
+    expect(shiftWorkout).toEqual(expect.arrayContaining([
+      { ...dummyWorkout, id: expect.any(Number), userID: user.id, position: 2 },
+      { ...dummyW2, id: expect.any(Number), userID: user.id, position: 3 },
+      { ...dummyW3, id: expect.any(Number), userID: user.id, position: 1 }]));
   });
 });

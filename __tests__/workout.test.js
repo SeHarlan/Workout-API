@@ -18,11 +18,12 @@ describe(' workout model', () => {
     const user = await User.insert(dummyUser);
     const createdWorkout = await Workout.insert(user.id, dummyWorkout);
 
-    expect(createdWorkout).toEqual({
-      ...dummyWorkout,
-      userID: user.id,
-      id: expect.any(Number)
-    });
+    expect(createdWorkout).toEqual(
+      {
+        ...dummyWorkout,
+        userID: user.id,
+        id: expect.any(Number)
+      });
   });
 
   it('finds a workout by id', async () => {
@@ -102,24 +103,6 @@ describe(' workout model', () => {
     expect(updatedWorkout).toBeInstanceOf(TypeError);
   });
 
-  it('updates a workout position by id', async () => {
-    const user = await User.insert(dummyUser);
-    const createdWorkout = await Workout.insert(user.id, dummyWorkout);
-
-    const updatedWorkout = await Workout.update({
-      ...dummyWorkout,
-      id: createdWorkout.id,
-      position: 5
-    });
-
-    expect(updatedWorkout).toEqual({
-      ...dummyWorkout,
-      id: createdWorkout.id,
-      position: 5,
-      userID: user.id
-    });
-  });
-
   it('deletes a workout by id', async () => {
     const user = await User.insert(dummyUser);
     const createdWorkout = await Workout.insert(user.id, dummyWorkout);
@@ -154,5 +137,66 @@ describe(' workout model', () => {
     const nullWorkouts = await Workout.getAll(user.id);
 
     expect(nullWorkouts).toEqual(null);
+  });
+
+  it('updates a workout position by id', async () => {
+
+    const user = await User.insert(dummyUser);
+
+    await Promise.all([
+      Workout.insert(user.id, dummyWorkout),
+      Workout.insert(user.id, dummyW2),
+    ]);
+    const insertedWorkout = await Workout.insert(user.id, dummyW3);
+
+    const workouts = await Workout.shift(user.id, insertedWorkout.id, 2);
+
+    expect(workouts).toEqual(expect.arrayContaining([
+      { ...dummyWorkout, id: expect.any(Number), userID: user.id, position: 1 },
+      { ...dummyW2, id: expect.any(Number), userID: user.id, position: 3 },
+      { ...dummyW3, id: expect.any(Number), userID: user.id, position: 2 }]));
+  });
+
+  it('increases position numbers when workout is inserted in the middle', async () => {
+    const user = await User.insert(dummyUser);
+
+    await Promise.all([
+      Workout.insert(user.id, dummyWorkout),
+      Workout.insert(user.id, dummyW2),
+      Workout.insert(user.id, dummyW3)
+    ]);
+
+
+    await Workout.insert(user.id, {
+      ...dummyWorkout,
+      name: 'position shifter',
+      position: 2
+    });
+
+    const workouts = await Workout.getAll(user.id);
+
+    expect(workouts).toEqual(expect.arrayContaining([
+      {
+        ...dummyWorkout,
+        id: expect.any(Number),
+        userID: user.id,
+        name: 'position shifter',
+        position: 2
+      },
+      { ...dummyWorkout, id: expect.any(Number), userID: user.id, position: 1 },
+      { ...dummyW2, id: expect.any(Number), userID: user.id, position: 3 },
+      { ...dummyW3, id: expect.any(Number), userID: user.id, position: 4 }]));
+  });
+  it('gets a workout count by user id', async () => {
+    const user = await User.insert(dummyUser);
+
+    await Promise.all([
+      Workout.insert(user.id, dummyWorkout),
+      Workout.insert(user.id, dummyW2),
+      Workout.insert(user.id, dummyW3)
+    ]);
+
+    const count = await Workout.getCount(user.id);
+    expect(count).toEqual(3);
   });
 });

@@ -5,7 +5,7 @@
     "heavy": 5,
     "medium": 3,
     "light": 1,
-    "position": 0
+    "position": 1
   },
   "dummyW2": {
     "name": "test2 name",
@@ -13,7 +13,7 @@
     "heavy": 10,
     "medium": 5,
     "light": 2,
-    "position": 1
+    "position": 2
   },
   "dummyW3": {
     "name": "test3 name",
@@ -21,7 +21,7 @@
     "heavy": 130,
     "medium": 50,
     "light": 20,
-    "position": 2
+    "position": 3
   },
   "dummyUser": {
     "name": "test",
