@@ -72,8 +72,7 @@ const RootMutationType = new GraphQLObjectType({
         description: { type: GraphQLString },
         heavy: { type: GraphQLInt },
         medium: { type: GraphQLInt },
-        light: { type: GraphQLInt },
-        position: { type: GraphQLNonNull(GraphQLInt) },
+        light: { type: GraphQLInt }
       },
       resolve: (parent, workout) => {
         return Workout.update(workout);
@@ -93,12 +92,11 @@ const RootMutationType = new GraphQLObjectType({
       type: new GraphQLList(WorkoutType),
       description: 'Incriments a users workout positions from designated spot',
       args: {
-        userID: { type: GraphQLNonNull(GraphQLInt) },
         workoutID: { type: GraphQLNonNull(GraphQLInt) },
         newPosition: { type: GraphQLNonNull(GraphQLInt) },
       },
-      resolve: (parent, { userID, workoutID, newPosition }) => {
-        return Workout.shift(userID, workoutID, newPosition);
+      resolve: (parent, { workoutID, newPosition }) => {
+        return Workout.shift(workoutID, newPosition);
       }
     },
   })

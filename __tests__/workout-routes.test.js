@@ -48,11 +48,10 @@ describe('Workout-API graphQL routes', () => {
       name: 'fail',
       passwordHash: 'fail hash'
     });
-    await Promise.all([
-      Workout.insert(user.id, dummyWorkout),
-      Workout.insert(user.id, dummyW2),
-      Workout.insert(user2.id, dummyW3)
-    ]);
+
+    await Workout.insert(user.id, dummyWorkout);
+    await Workout.insert(user.id, dummyW2);
+    await Workout.insert(user2.id, dummyW3);
 
     const query = `
       query {
@@ -87,7 +86,7 @@ describe('Workout-API graphQL routes', () => {
 
     const query = `
     mutation {
-      updateWorkout(id: ${createdWorkout.id}, name: "new name", description: "${dummyWorkout.description}", heavy: 100, medium: ${dummyWorkout.medium}, light: ${dummyWorkout.light}, position: ${dummyWorkout.position}) {
+      updateWorkout(id: ${createdWorkout.id}, name: "new name", description: "${dummyWorkout.description}", heavy: 100, medium: ${dummyWorkout.medium}, light: ${dummyWorkout.light}) {
         id
         userID
         name
@@ -144,15 +143,15 @@ describe('Workout-API graphQL routes', () => {
 
   it('shifts a workouts position from a newly declared position', async () => {
     const user = await User.insert(dummyUser);
-    await Promise.all([
-      Workout.insert(user.id, dummyWorkout),
-      Workout.insert(user.id, dummyW2),
-    ]);
+
+    await Workout.insert(user.id, dummyWorkout);
+    await Workout.insert(user.id, dummyW2);
+
     const insertedWorkout = await Workout.insert(user.id, dummyW3);
 
     const query = `
       mutation {
-        shiftWorkout(userID: ${user.id}, workoutID: ${insertedWorkout.id}, newPosition: 1) {
+        shiftWorkout(workoutID: ${insertedWorkout.id}, newPosition: 1) {
           id
           userID
           name

@@ -5,7 +5,7 @@ const fs = require('fs');
 
 const { dummyWorkout, dummyW2, dummyW3, dummyUser } = require('./dummyData.json');
 
-describe(' workout model', () => {
+describe('workout model', () => {
   beforeEach(() => {
     return pool.query(fs.readFileSync('./sql/setup.sql', 'utf-8'));
   });
@@ -46,11 +46,10 @@ describe(' workout model', () => {
       name: 'fail',
       passwordHash: 'fail hash'
     });
-    await Promise.all([
-      Workout.insert(user.id, dummyWorkout),
-      Workout.insert(user.id, dummyW2),
-      Workout.insert(user2.id, dummyW3)
-    ]);
+
+    await Workout.insert(user.id, dummyWorkout);
+    await Workout.insert(user.id, dummyW2);
+    await Workout.insert(user2.id, dummyW3);
 
     const workouts = await Workout.getAll(user.id);
 
@@ -115,11 +114,9 @@ describe(' workout model', () => {
   it('deletes all workouts with userID and returns null with get all', async () => {
     const user = await User.insert(dummyUser);
 
-    await Promise.all([
-      Workout.insert(user.id, dummyWorkout),
-      Workout.insert(user.id, dummyW2),
-      Workout.insert(user.id, dummyW3)
-    ]);
+    await Workout.insert(user.id, dummyWorkout);
+    await Workout.insert(user.id, dummyW2);
+    await Workout.insert(user.id, dummyW3);
 
     const workouts = await Workout.getAll(user.id);
 
@@ -139,13 +136,11 @@ describe(' workout model', () => {
 
     const user = await User.insert(dummyUser);
 
-    await Promise.all([
-      Workout.insert(user.id, dummyWorkout),
-      Workout.insert(user.id, dummyW2),
-    ]);
+    await Workout.insert(user.id, dummyWorkout);
+    await Workout.insert(user.id, dummyW2);
     const insertedWorkout = await Workout.insert(user.id, dummyW3);
 
-    const workouts = await Workout.shift(user.id, insertedWorkout.id, 2);
+    const workouts = await Workout.shift(insertedWorkout.id, 2);
 
     expect(workouts).toEqual(expect.arrayContaining([
       { ...dummyWorkout, id: expect.any(Number), userID: user.id, position: 1 },
@@ -156,12 +151,9 @@ describe(' workout model', () => {
   it('increases position numbers when workout is inserted in the middle', async () => {
     const user = await User.insert(dummyUser);
 
-    await Promise.all([
-      Workout.insert(user.id, dummyWorkout),
-      Workout.insert(user.id, dummyW2),
-      Workout.insert(user.id, dummyW3)
-    ]);
-
+    await Workout.insert(user.id, dummyWorkout);
+    await Workout.insert(user.id, dummyW2);
+    await Workout.insert(user.id, dummyW3);
 
     await Workout.insert(user.id, {
       ...dummyWorkout,
@@ -186,13 +178,15 @@ describe(' workout model', () => {
   it('gets a workout count by user id', async () => {
     const user = await User.insert(dummyUser);
 
-    await Promise.all([
-      Workout.insert(user.id, dummyWorkout),
-      Workout.insert(user.id, dummyW2),
-      Workout.insert(user.id, dummyW3)
-    ]);
+
+    await Workout.insert(user.id, dummyWorkout);
+    await Workout.insert(user.id, dummyW2);
+    await Workout.insert(user.id, dummyW3);
+
 
     const count = await Workout.getCount(user.id);
+    const { length } = await Workout.getAll(user.id);
+    expect(count).toEqual(length);
     expect(count).toEqual(3);
   });
 });
