@@ -60,6 +60,22 @@ describe('workout model', () => {
     expect(workouts).not.toEqual(expect.arrayContaining([{ ...dummyW3, id: expect.any(Number), userID: user2.id }]));
   });
 
+  it('gets all workouts ordered by Position', async () => {
+    const user = await User.insert(dummyUser);
+
+    await Workout.insert(user.id, dummyWorkout);
+    await Workout.insert(user.id, dummyW2);
+    await Workout.insert(user.id, { ...dummyW3, position: 2 });
+
+    const workouts = await Workout.getAll(user.id);
+
+    expect(workouts).toEqual([
+      { ...dummyWorkout, id: expect.any(Number), userID: user.id },
+      { ...dummyW3, id: expect.any(Number), userID: user.id, position: 2 },
+      { ...dummyW2, id: expect.any(Number), userID: user.id, position: 3 },
+    ]);
+  });
+
   it('returns null when there is no user found with a get all', async () => {
     const nullWorkouts = await Workout.getAll(234234234);
     expect(nullWorkouts).toEqual(null);
