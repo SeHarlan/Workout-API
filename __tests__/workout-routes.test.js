@@ -119,7 +119,7 @@ describe('Workout-API graphQL routes', () => {
 
     const query = `
       mutation {
-        deleteWorkout(id: ${createdWorkout.id}) {
+        deleteWorkout(id: ${createdWorkout.id}, userID: ${user.id}) {
           id
           userID
           name
@@ -138,7 +138,7 @@ describe('Workout-API graphQL routes', () => {
 
     const { deleteWorkout } = body.data;
 
-    expect(deleteWorkout).toEqual(createdWorkout);
+    expect(deleteWorkout).toEqual({ ...createdWorkout, position: 1 });
   });
 
   it('shifts a workouts position from a newly declared position', async () => {

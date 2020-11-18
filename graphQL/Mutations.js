@@ -83,6 +83,7 @@ const RootMutationType = new GraphQLObjectType({
       description: 'Deletes a workout using the id',
       args: {
         id: { type: GraphQLNonNull(GraphQLInt) },
+        userID: { type: GraphQLNonNull(GraphQLInt) },
       },
       resolve: (parent, { id }) => {
         return Workout.delete(id);

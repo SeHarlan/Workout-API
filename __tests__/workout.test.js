@@ -118,10 +118,11 @@ describe('workout model', () => {
     const user = await User.insert(dummyUser);
     const createdWorkout = await Workout.insert(user.id, dummyWorkout);
 
-    const deletedWorkout = await Workout.delete(createdWorkout.id);
+    const deletedWorkout = await Workout.delete(createdWorkout.id, user.id);
 
     expect(deletedWorkout).toEqual({
       ...dummyWorkout,
+      position: 2,
       userID: user.id,
       id: createdWorkout.id
     });
@@ -204,5 +205,51 @@ describe('workout model', () => {
     const { length } = await Workout.getAll(user.id);
     expect(count).toEqual(length);
     expect(count).toEqual(3);
+  });
+
+
+  //new tests
+  it('shifts positions down when shifting position on top', async () => {
+    const user = await User.insert(dummyUser);
+
+    const insertedWorkout = await Workout.insert(user.id, dummyWorkout);
+    await Workout.insert(user.id, dummyW2);
+    await Workout.insert(user.id, dummyW3);
+
+    const workouts = await Workout.shift(insertedWorkout.id, 3);
+
+    expect(workouts).toEqual(expect.arrayContaining([
+      { ...dummyWorkout, id: expect.any(Number), userID: user.id, position: 3 },
+      { ...dummyW2, id: expect.any(Number), userID: user.id, position: 1 },
+      { ...dummyW3, id: expect.any(Number), userID: user.id, position: 2 }]));
+
+  });
+
+  it('shifts upper positions down when deleting a workout from the middle', async () => {
+    const user = await User.insert(dummyUser);
+
+    await Workout.insert(user.id, dummyWorkout);
+    await Workout.insert(user.id, dummyW2);
+    const toBeDeleteWorkout = await Workout.insert(user.id, dummyW3);
+    await Workout.insert(user.id, {
+      ...dummyW2,
+      position: 4
+    });
+    await Workout.insert(user.id, {
+      ...dummyW3,
+      position: 5
+    });
+
+    await Workout.delete(toBeDeleteWorkout.id, user.id);
+
+    const workouts = await Workout.getAll(user.id);
+
+    expect(workouts).toEqual(expect.arrayContaining([
+      { ...dummyWorkout, id: expect.any(Number), userID: user.id, position: 1 },
+      { ...dummyW2, id: expect.any(Number), userID: user.id, position: 2 },
+      { ...dummyW2, id: expect.any(Number), userID: user.id, position: 3 },
+      { ...dummyW3, id: expect.any(Number), userID: user.id, position: 4 }
+
+    ]));
   });
 });
